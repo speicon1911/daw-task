@@ -23,7 +23,7 @@ public class TareaService {
 
 	public Tarea findById(int idTarea) {
 		if(!this.tareaRepository.existsById(idTarea)) {
-			throw new TareaNotFoundException("El ID de la tarea no existe");
+			throw new TareaNotFoundException("El ID " + idTarea + " de la tarea no existe");
 		}
 		
 		return this.tareaRepository.findById(idTarea).get();
