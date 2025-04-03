@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.daw.persistence.entities.Tarea;
 import com.daw.services.TareaService;
+import com.daw.services.exceptions.TareaExceptions;
 import com.daw.services.exceptions.TareaNotFoundException;
 
 @RestController
@@ -26,32 +27,44 @@ public class TareaController {
 	private TareaService tareaService;
 
 	@GetMapping
-	public List<Tarea> list() {
-		return this.tareaService.findAll();
+	public ResponseEntity<List<Tarea>> list() {
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.findAll());
 	}
 
 	@GetMapping("/{idTarea}")
 	public ResponseEntity<?> findById(@PathVariable int idTarea) {
 		try {
 			return ResponseEntity.ok(this.tareaService.findById(idTarea));
-		} 
-		catch (TareaNotFoundException ex) {
+		} catch (TareaNotFoundException ex) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
 		}
 	}
 
 	@DeleteMapping("/{idTarea}")
-	public boolean delete(@PathVariable int idTarea) {
-		return this.tareaService.deleteById(idTarea);
+	public ResponseEntity<?> delete(@PathVariable int idTarea) {
+		try {
+			this.tareaService.deleteById(idTarea);
+			return ResponseEntity.ok().build();
+			// return ResponseEntity.ok("La tarea con ID(" + idTarea + ") ha sido borrada correctamente" )
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		}
 	}
 
 	@PostMapping
-	public Tarea create(@RequestBody Tarea tarea) {
-		return this.tareaService.create(tarea);
+	public ResponseEntity<Tarea> create(@RequestBody Tarea tarea) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
 	}
 
 	@PutMapping("/{idTarea}")
-	public Tarea update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
-		return this.tareaService.update(tarea);
+	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
+		try {
+			return ResponseEntity.ok(this.tareaService.update(idTarea, tarea));
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+
+		} catch (TareaExceptions ex) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+		}
 	}
 }
