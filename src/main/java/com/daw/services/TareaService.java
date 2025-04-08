@@ -79,7 +79,7 @@ public class TareaService {
 
 		return this.tareaRepository.save(tarea);
 	}
-	
+
 	// Ejemplos OPTIONAL
 	public boolean deleteDeclarativo(int idTarea) {
 		boolean result = false;
@@ -92,8 +92,7 @@ public class TareaService {
 	}
 
 	public boolean deleteFuncional(int idTarea) {
-		return this.tareaRepository.findById(idTarea)
-				.map(t -> {
+		return this.tareaRepository.findById(idTarea).map(t -> {
 			this.tareaRepository.deleteById(idTarea);
 			return true;
 		}).orElse(false);
@@ -105,48 +104,69 @@ public class TareaService {
 	}
 
 	// Ejemplos Stream
-	
-	//Obtener el numero total de tareas completadas
-	public long totalTareasCompletadas() {
-		return this.tareaRepository.findAll().stream()
-				.filter(t -> t.getEstado() == Estado.COMPLETADA)
-				.count();
-	}
-	
-	//Obtener una lista de las fechas de vencimientos de las tareas que esten en progreso
-	public List<LocalDate> fechasVencimientoEnProgreso(){
-		return this.tareaRepository.findAll().stream()
-				.filter(t -> t.getEstado() == Estado.EN_PROGRESO)
-				.map(t -> t.getFechaVencimiento())
-				.collect(Collectors.toList());
-	}
-	
-	// Obtener las tareas vencidas.
-	public List<Tarea> tareasVencidas() {
-		return this.tareaRepository.findAll().stream()
-				.filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
-				.collect(Collectors.toList());
-	}
-	
-	/*
-	 * Otra forma
-	 * public void tareasVencidas() { this.tareaRepository.findAll().stream()
-	 * .filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
-	 * .collect(Collectors.toList()) }
-	 */
-	
-	// Obtener los titulos de las tareas pendientes
-	public List<String> tituloTareasPendientes(){
-		return this.tareaRepository.findAll().stream()
-				.filter(t -> t.getEstado()== Estado.PENDIENTE)
-				.map(t -> t.getTitulo())
-				.collect(Collectors.toList());
-	}
-	
-	public List<Tarea> ordenarPorFechaVencimiento(){
-		return this.tareaRepository.findAll().stream()
-				.
 
+	// Obtener el numero total de tareas completadas
+	public long totalTareasCompletadasFuncional() {
+		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.COMPLETADA).count();
 	}
-	
+
+	// Con repository
+	public long totalTareasCompletadas() {
+		return this.tareaRepository.countByEstado(Estado.COMPLETADA);
+	}
+
+	// Obtener una lista de las fechas de vencimientos de las tareas que esten en
+	// progreso
+	public List<LocalDate> fechasVencimientoEnProgresoFuncional() {
+		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.EN_PROGRESO)
+				.map(t -> t.getFechaVencimiento()).collect(Collectors.toList());
+	}
+
+	// Con repository
+	public List<LocalDate> fechaVencimientoEnProgreso() {
+		return this.tareaRepository.findByEstado(Estado.EN_PROGRESO).stream().map(t -> t.getFechaVencimiento())
+				.collect(Collectors.toList());
+	}
+
+	// Obtener las tareas vencidas.
+	public void tareasVencidasFuncional() {
+		this.tareaRepository.findAll().stream().filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
+				.collect(Collectors.toList());
+	}
+
+	// Con repository
+	public List<Tarea> tareasVencidas() {
+		return this.tareaRepository.findByFechaVencimientoBefore(LocalDate.now());
+	}
+
+	/*
+	 * Otra forma public List<Tarea> tareasVencidas() { return
+	 * this.tareaRepository.findAll().stream() .filter(t ->
+	 * t.getFechaVencimiento().isBefore(LocalDate.now()))
+	 * .collect(Collectors.toList());
+	 */
+
+	// Obtener los titulos de las tareas pendientes
+	public List<String> tituloTareasPendientesFuncional() {
+		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.PENDIENTE)
+				.map(t -> t.getTitulo()).collect(Collectors.toList());
+	}
+
+	// Con repository
+	public List<String> tituloTareasPendientes() {
+		return this.tareaRepository.findByEstado(Estado.PENDIENTE).stream().map(t -> t.getTitulo())
+				.collect(Collectors.toList());
+	}
+
+	// Obtener las tareas ordenadas por fecha de vencimiento.
+	public List<Tarea> ordenarPorFechaVencimientoFuncional() {
+		return this.tareaRepository.findAll().stream()
+				.sorted((t1, t2) -> t1.getFechaVencimiento().compareTo(t2.getFechaVencimiento()))
+				.collect(Collectors.toList());
+	}
+
+	// Con repository
+	public List<Tarea> ordenarPorFechaVencimiento() {
+		return this.tareaRepository.findAllByOrderByFechaVencimiento();
+	}
 }
