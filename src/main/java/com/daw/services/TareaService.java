@@ -1,8 +1,9 @@
 package com.daw.services;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -119,4 +120,33 @@ public class TareaService {
 				.map(t -> t.getFechaVencimiento())
 				.collect(Collectors.toList());
 	}
+	
+	// Obtener las tareas vencidas.
+	public List<Tarea> tareasVencidas() {
+		return this.tareaRepository.findAll().stream()
+				.filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
+				.collect(Collectors.toList());
+	}
+	
+	/*
+	 * Otra forma
+	 * public void tareasVencidas() { this.tareaRepository.findAll().stream()
+	 * .filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
+	 * .collect(Collectors.toList()) }
+	 */
+	
+	// Obtener los titulos de las tareas pendientes
+	public List<String> tituloTareasPendientes(){
+		return this.tareaRepository.findAll().stream()
+				.filter(t -> t.getEstado()== Estado.PENDIENTE)
+				.map(t -> t.getTitulo())
+				.collect(Collectors.toList());
+	}
+	
+	public List<Tarea> ordenarPorFechaVencimiento(){
+		return this.tareaRepository.findAll().stream()
+				.
+
+	}
+	
 }
