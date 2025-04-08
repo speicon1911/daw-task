@@ -2,6 +2,8 @@ package com.daw.services;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -75,5 +77,46 @@ public class TareaService {
 		tareaDB.setFechaVencimiento(tarea.getFechaVencimiento());
 
 		return this.tareaRepository.save(tarea);
+	}
+	
+	// Ejemplos OPTIONAL
+	public boolean deleteDeclarativo(int idTarea) {
+		boolean result = false;
+
+		if (this.tareaRepository.existsById(idTarea)) {
+			this.tareaRepository.deleteById(idTarea);
+			result = true;
+		}
+		return result;
+	}
+
+	public boolean deleteFuncional(int idTarea) {
+		return this.tareaRepository.findById(idTarea)
+				.map(t -> {
+			this.tareaRepository.deleteById(idTarea);
+			return true;
+		}).orElse(false);
+	}
+
+	public Tarea findByIdFuncional(int idTarea) {
+		return this.tareaRepository.findById(idTarea)
+				.orElseThrow(() -> new TareaNotFoundException("No existe la tarea con ID: " + idTarea));
+	}
+
+	// Ejemplos Stream
+	
+	//Obtener el numero total de tareas completadas
+	public long totalTareasCompletadas() {
+		return this.tareaRepository.findAll().stream()
+				.filter(t -> t.getEstado() == Estado.COMPLETADA)
+				.count();
+	}
+	
+	//Obtener una lista de las fechas de vencimientos de las tareas que esten en progreso
+	public List<LocalDate> fechasVencimientoEnProgreso(){
+		return this.tareaRepository.findAll().stream()
+				.filter(t -> t.getEstado() == Estado.EN_PROGRESO)
+				.map(t -> t.getFechaVencimiento())
+				.collect(Collectors.toList());
 	}
 }
