@@ -26,11 +26,13 @@ public class TareaController {
 	@Autowired
 	private TareaService tareaService;
 
+	// Obtener todas las tareas.
 	@GetMapping
 	public ResponseEntity<List<Tarea>> list() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.findAll());
 	}
 
+	// Obtener una tarea mediante su ID.
 	@GetMapping("/{idTarea}")
 	public ResponseEntity<?> findById(@PathVariable int idTarea) {
 		try {
@@ -40,6 +42,7 @@ public class TareaController {
 		}
 	}
 
+	// Borrar una tarea.
 	@DeleteMapping("/{idTarea}")
 	public ResponseEntity<?> delete(@PathVariable int idTarea) {
 		try {
@@ -51,11 +54,14 @@ public class TareaController {
 		}
 	}
 
+	// Crear una tarea.
 	@PostMapping
 	public ResponseEntity<Tarea> create(@RequestBody Tarea tarea) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
 	}
-
+	
+	
+	// Modificar una tarea.
 	@PutMapping("/{idTarea}")
 	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
 		try {
@@ -67,4 +73,19 @@ public class TareaController {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
 		}
 	}
+	
+	// Obtener las tareas vencidas (fecha de vencimiento menor que la de hoy).
+	@GetMapping("/tareas-vencidas")
+	public ResponseEntity<List<Tarea>> findByTareasVencidas(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasVencidas());
+	}
+	
+	// Obtener las tareas no vencidas (fecha de vencimiento mayor que la de hoy).
+	@GetMapping("/tareas-no-vencidas")
+	public ResponseEntity<List<Tarea>> findByTareasNoVencidas(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasNoVencidas());
+	}
+	
+	
+	
 }

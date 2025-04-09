@@ -1,9 +1,7 @@
 package com.daw.services;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +19,12 @@ public class TareaService {
 	@Autowired
 	private TareaRepository tareaRepository;
 
+	// Obtener todas las tareas.
 	public List<Tarea> findAll() {
 		return this.tareaRepository.findAll();
 	}
 
+	// Obtener una tarea mediante su ID.
 	public Tarea findById(int idTarea) {
 		if (!this.tareaRepository.existsById(idTarea)) {
 			throw new TareaNotFoundException("No existe la tarea con ID: " + idTarea);
@@ -37,13 +37,16 @@ public class TareaService {
 		return this.tareaRepository.existsById(idTarea);
 	}
 
+	// Borrar una tarea.
 	public void deleteById(int idTarea) {
 		if (!existsById(idTarea)) {
 			throw new TareaNotFoundException("El ID introducido no aparece en la base de datos");
 		}
 		this.tareaRepository.deleteById(idTarea);
 	}
+	
 
+	// Crear una tarea.
 	public Tarea create(Tarea tarea) {
 		tarea.setFechaCreacion(LocalDate.now());
 		tarea.setEstado(Estado.PENDIENTE);
@@ -53,6 +56,7 @@ public class TareaService {
 		return tareaBD;
 	}
 
+	// Modificar una tarea.
 	public Tarea update(int idTarea, Tarea tarea) {
 		if (idTarea != tarea.getId()) {
 			throw new TareaExceptions(
@@ -129,6 +133,7 @@ public class TareaService {
 	}
 
 	// Obtener las tareas vencidas.
+	// Stream
 	public void tareasVencidasFuncional() {
 		this.tareaRepository.findAll().stream().filter(t -> t.getFechaVencimiento().isBefore(LocalDate.now()))
 				.collect(Collectors.toList());
@@ -137,6 +142,18 @@ public class TareaService {
 	// Con repository
 	public List<Tarea> tareasVencidas() {
 		return this.tareaRepository.findByFechaVencimientoBefore(LocalDate.now());
+	}
+
+	// Obtener las tareas no vencidas
+	// Repository
+	public List<Tarea> tareasNoVencidas() {
+		return this.tareaRepository.findByFechaVencimientoAfter(LocalDate.now());
+	}
+	// Stream
+	public void tareasNoVencidadFuncional() {
+		this.tareaRepository.findAll().stream()
+		.filter(t -> t.getFechaVencimiento().isAfter(LocalDate.now()))
+		.collect(Collectors.toList());
 	}
 
 	/*
@@ -169,4 +186,6 @@ public class TareaService {
 	public List<Tarea> ordenarPorFechaVencimiento() {
 		return this.tareaRepository.findAllByOrderByFechaVencimiento();
 	}
+	
+	
 }
