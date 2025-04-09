@@ -44,7 +44,6 @@ public class TareaService {
 		}
 		this.tareaRepository.deleteById(idTarea);
 	}
-	
 
 	// Crear una tarea.
 	public Tarea create(Tarea tarea) {
@@ -63,11 +62,12 @@ public class TareaService {
 					"El ID del Path (" + idTarea + ") y el body (" + tarea.getId() + ") no coinciden");
 		}
 		if (!this.tareaRepository.existsById(idTarea)) {
-			throw new TareaExceptions("No se ha enconyrado la tarea con ID: " + idTarea);
+			throw new TareaExceptions("No se ha encontrado la tarea con ID: " + idTarea);
 		}
 		if (tarea.getFechaCreacion() != null || tarea.getEstado() != null) {
 			throw new TareaExceptions("No se permite modificar la fecha de creación y/o el estado");
 		}
+		
 
 		Tarea tareaDB = this.findById(tarea.getId());
 		/*
@@ -81,7 +81,7 @@ public class TareaService {
 		tareaDB.setDescripcion(tarea.getDescripcion());
 		tareaDB.setFechaVencimiento(tarea.getFechaVencimiento());
 
-		return this.tareaRepository.save(tarea);
+		return this.tareaRepository.save(tareaDB);
 	}
 
 	// Ejemplos OPTIONAL
@@ -149,11 +149,11 @@ public class TareaService {
 	public List<Tarea> tareasNoVencidas() {
 		return this.tareaRepository.findByFechaVencimientoAfter(LocalDate.now());
 	}
+
 	// Stream
 	public void tareasNoVencidadFuncional() {
-		this.tareaRepository.findAll().stream()
-		.filter(t -> t.getFechaVencimiento().isAfter(LocalDate.now()))
-		.collect(Collectors.toList());
+		this.tareaRepository.findAll().stream().filter(t -> t.getFechaVencimiento().isAfter(LocalDate.now()))
+				.collect(Collectors.toList());
 	}
 
 	/*
@@ -175,6 +175,18 @@ public class TareaService {
 				.collect(Collectors.toList());
 	}
 
+	// Obtener las tareas en progreso.
+	public List<?> tareasEnProgresoFuncional() {
+		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.EN_PROGRESO)
+				.collect(Collectors.toList());
+	}
+
+	// Obtener las tareas completadas.
+	public List<?> tareasCompletadas() {
+		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.COMPLETADA)
+				.collect(Collectors.toList());
+	}
+
 	// Obtener las tareas ordenadas por fecha de vencimiento.
 	public List<Tarea> ordenarPorFechaVencimientoFuncional() {
 		return this.tareaRepository.findAll().stream()
@@ -186,6 +198,37 @@ public class TareaService {
 	public List<Tarea> ordenarPorFechaVencimiento() {
 		return this.tareaRepository.findAllByOrderByFechaVencimiento();
 	}
-	
-	
+
+	// Obtener tareas mediante su título (que contenga el String que se pasa como
+	// título).
+	public List<String> tituloTareaFuncional() {
+		return this.tareaRepository.findAll().stream().map(t -> t.getTitulo()).collect(Collectors.toList());
+	}
+
+	// Completar una tarea (solo se puden completar tareas EN_PROGRESO).
+	public Tarea completarTarea(int idTarea, Tarea tarea) {
+		if (idTarea != tarea.getId()) {
+			throw new TareaExceptions(
+					"El ID del Path (" + idTarea + ") y el body (" + tarea.getId() + ") no coinciden");
+		}
+		if (!this.tareaRepository.existsById(idTarea)) {
+			throw new TareaExceptions("No se ha encontrado la tarea con ID: " + idTarea);
+		}
+		if (tarea.getEstado() == Estado.PENDIENTE) {
+			throw new TareaExceptions(
+					"La tarea introducida no se puede completar, ya que su estado debe estar en progreso");
+		}
+
+		Tarea tareaDB = this.findById(tarea.getId());
+		tarea.setFechaCreacion(tareaDB.getFechaCreacion());
+		tarea.setDescripcion(tarea.getDescripcion());
+		tarea.setTitulo(tarea.getTitulo());
+		tarea.setFechaVencimiento(tarea.getFechaVencimiento());
+
+		/* ESTO SI DEJA ACTUALZIAR DATOS, ES DECIR, MODIFCARLOS */
+		tareaDB.setEstado(Estado.COMPLETADA);
+
+		return this.tareaRepository.save(tarea);
+	}
+
 }

@@ -60,7 +60,6 @@ public class TareaController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
 	}
 	
-	
 	// Modificar una tarea.
 	@PutMapping("/{idTarea}")
 	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
@@ -72,6 +71,24 @@ public class TareaController {
 		} catch (TareaExceptions ex) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
 		}
+	}
+	
+	// Obtener las tareas pendientes.
+	@GetMapping("/tarea-pendiente")
+	public ResponseEntity<List<String>> findByTareaPendiente(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tituloTareasPendientes());
+	}
+	
+	// Obtener las tareas en progreso.
+	@GetMapping("/tarea-en-progreso")
+	public ResponseEntity<?> findByTareaEnProceso(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasEnProgresoFuncional());
+	}
+	
+	// Obtener las tareas completadas.
+	@GetMapping("/tareas-completadas")
+	public ResponseEntity<?> findByTareaCompletada(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasCompletadas());
 	}
 	
 	// Obtener las tareas vencidas (fecha de vencimiento menor que la de hoy).
@@ -86,6 +103,24 @@ public class TareaController {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasNoVencidas());
 	}
 	
+	// Obtener tareas mediante su título (que contenga el String que se pasa como título).
+	@GetMapping("/titulo")
+	public ResponseEntity<List<String>> findByTitulo(){
+		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tituloTareaFuncional());
+	}
 	
+	// Completar una tarea (solo se puden completar tareas EN_PROGRESO).
+	@PutMapping("/completar")
+	public ResponseEntity<?> completarTarea(@PathVariable int idTarea, @RequestBody Tarea tarea){
+		try {
+			return ResponseEntity.ok(this.tareaService.completarTarea(idTarea, tarea));
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+
+		} catch (TareaExceptions ex) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+		}
+		
+	}
 	
 }
