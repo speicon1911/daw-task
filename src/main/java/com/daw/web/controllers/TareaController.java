@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.daw.persistence.entities.Tarea;
@@ -42,76 +43,94 @@ public class TareaController {
 		}
 	}
 
+	// Crear una tarea.
+	@PostMapping
+	public ResponseEntity<?> create(@RequestBody Tarea tarea) {
+		try {
+			return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
+		} catch (TareaExceptions ex) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+		}
+
+	}
+
+	// Modificar una tarea.
+	@PutMapping("/{idTarea}")
+	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
+		try {
+			return ResponseEntity.ok(this.tareaService.update( idTarea, tarea));
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		} catch (TareaExceptions ex) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+		}
+	}
+
+	// Iniciar una tarea
+	@PutMapping("/{idTarea}/iniciar")
+	public ResponseEntity<?> iniciarTarea(@PathVariable int idTarea) {
+		try {
+			return ResponseEntity.ok(this.tareaService.iniciarTarea(idTarea));
+		} catch (TareaNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		} catch (TareaExceptions ex) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+		}
+	}
+
 	// Borrar una tarea.
 	@DeleteMapping("/{idTarea}")
 	public ResponseEntity<?> delete(@PathVariable int idTarea) {
 		try {
 			this.tareaService.deleteById(idTarea);
 			return ResponseEntity.ok().build();
-			// return ResponseEntity.ok("La tarea con ID(" + idTarea + ") ha sido borrada correctamente" )
+			// return ResponseEntity.ok("La tarea con ID(" + idTarea + ") ha sido borrada
+			// correctamente" )
 		} catch (TareaNotFoundException ex) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
 		}
 	}
 
-	// Crear una tarea.
-	@PostMapping
-	public ResponseEntity<Tarea> create(@RequestBody Tarea tarea) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(this.tareaService.create(tarea));
-	}
-	
-	// Modificar una tarea.
-	@PutMapping("/{idTarea}")
-	public ResponseEntity<?> update(@PathVariable int idTarea, @RequestBody Tarea tarea) {
-		try {
-			return ResponseEntity.ok(this.tareaService.update(idTarea, tarea));
-		} catch (TareaNotFoundException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-
-		} catch (TareaExceptions ex) {
-			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-		}
-	}
-	
 	// Obtener las tareas pendientes.
 	@GetMapping("/tarea-pendiente")
-	public ResponseEntity<List<String>> findByTareaPendiente(){
+	public ResponseEntity<List<String>> findByTareaPendiente() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tituloTareasPendientes());
 	}
-	
+
 	// Obtener las tareas en progreso.
 	@GetMapping("/tarea-en-progreso")
-	public ResponseEntity<?> findByTareaEnProceso(){
+	public ResponseEntity<?> findByTareaEnProceso() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasEnProgresoFuncional());
 	}
-	
+
 	// Obtener las tareas completadas.
 	@GetMapping("/tareas-completadas")
-	public ResponseEntity<?> findByTareaCompletada(){
+	public ResponseEntity<?> findByTareaCompletada() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasCompletadas());
 	}
-	
+
 	// Obtener las tareas vencidas (fecha de vencimiento menor que la de hoy).
 	@GetMapping("/tareas-vencidas")
-	public ResponseEntity<List<Tarea>> findByTareasVencidas(){
+	public ResponseEntity<List<Tarea>> findByTareasVencidas() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasVencidas());
 	}
-	
+
 	// Obtener las tareas no vencidas (fecha de vencimiento mayor que la de hoy).
 	@GetMapping("/tareas-no-vencidas")
-	public ResponseEntity<List<Tarea>> findByTareasNoVencidas(){
+	public ResponseEntity<List<Tarea>> findByTareasNoVencidas() {
 		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tareasNoVencidas());
 	}
-	
-	// Obtener tareas mediante su título (que contenga el String que se pasa como título).
-	@GetMapping("/titulo")
-	public ResponseEntity<List<String>> findByTitulo(){
-		return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.tituloTareaFuncional());
-	}
-	
+
+	// Obtener tareas mediante su título (que contenga el String que se pasa como
+	// título).
+	 @GetMapping("/titulo")
+	    public ResponseEntity<List<Tarea>> obtenerTareasPorTitulo(@RequestParam String titulo) {
+	        return ResponseEntity.status(HttpStatus.OK).body(this.tareaService.obtenerTareasPorTitulo(titulo));
+	    }
+
 	// Completar una tarea (solo se puden completar tareas EN_PROGRESO).
-	@PutMapping("/completar")
-	public ResponseEntity<?> completarTarea(@PathVariable int idTarea, @RequestBody Tarea tarea){
+	@PutMapping("/{idTarea}/completar")
+	public ResponseEntity<?> completarTarea(@PathVariable int idTarea, Tarea tarea) {
 		try {
 			return ResponseEntity.ok(this.tareaService.completarTarea(idTarea, tarea));
 		} catch (TareaNotFoundException ex) {
@@ -120,7 +139,7 @@ public class TareaController {
 		} catch (TareaExceptions ex) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
 		}
-		
+
 	}
-	
+
 }

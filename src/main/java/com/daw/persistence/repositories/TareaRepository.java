@@ -26,4 +26,6 @@ public interface TareaRepository extends ListCrudRepository<Tarea, Integer>{
 	//	Obtener las tareas ordenadas por fecha de vencimiento.
 	List<Tarea> findAllByOrderByFechaVencimiento();
 	
+    List<Tarea> findByTituloContainingIgnoreCase(String titulo);
+
 }

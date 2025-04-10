@@ -37,19 +37,14 @@ public class TareaService {
 		return this.tareaRepository.existsById(idTarea);
 	}
 
-	// Borrar una tarea.
-	public void deleteById(int idTarea) {
-		if (!existsById(idTarea)) {
-			throw new TareaNotFoundException("El ID introducido no aparece en la base de datos");
-		}
-		this.tareaRepository.deleteById(idTarea);
-	}
-
 	// Crear una tarea.
 	public Tarea create(Tarea tarea) {
 		tarea.setFechaCreacion(LocalDate.now());
+		if (tarea.getFechaVencimiento().isBefore(tarea.getFechaCreacion())) {
+			throw new TareaExceptions("La fecha de vencimiento debe ser mayor que la de creacion");
+		}
 		tarea.setEstado(Estado.PENDIENTE);
-
+		tarea.setId(0);
 		Tarea tareaBD = this.tareaRepository.save(tarea);
 
 		return tareaBD;
@@ -59,29 +54,43 @@ public class TareaService {
 	public Tarea update(int idTarea, Tarea tarea) {
 		if (idTarea != tarea.getId()) {
 			throw new TareaExceptions(
-					"El ID del Path (" + idTarea + ") y el body (" + tarea.getId() + ") no coinciden");
+					"El ID del path (" + idTarea + ") y el id del body (" + tarea.getId() + ") no coinciden");
 		}
 		if (!this.tareaRepository.existsById(idTarea)) {
-			throw new TareaExceptions("No se ha encontrado la tarea con ID: " + idTarea);
+			throw new TareaNotFoundException("No existe la tarea con ID: " + idTarea);
 		}
 		if (tarea.getFechaCreacion() != null || tarea.getEstado() != null) {
-			throw new TareaExceptions("No se permite modificar la fecha de creación y/o el estado");
+			throw new TareaExceptions("No se permite modificar la fecha de creación y/o el estado. ");
 		}
-		
 
-		Tarea tareaDB = this.findById(tarea.getId());
-		/*
-		 * ESTO HACE QUE NO SE PUEDA ACTUALIZAR
-		 * tarea.setFechaCreacion(tareaDB.getFechaCreacion());
-		 * tarea.setEstado(tareaDB.getEstado());
-		 */
+		Tarea tareaBD = this.findById(tarea.getId());
+		tareaBD.setTitulo(tarea.getTitulo());
+		tareaBD.setDescripcion(tarea.getDescripcion());
+		tareaBD.setFechaVencimiento(tarea.getFechaVencimiento());
 
-		/* ESTO SI DEJA ACTUALZIAR DATOS, ES DECIR, MODIFCARLOS */
-		tareaDB.setTitulo(tarea.getTitulo());
-		tareaDB.setDescripcion(tarea.getDescripcion());
-		tareaDB.setFechaVencimiento(tarea.getFechaVencimiento());
+		return this.tareaRepository.save(tareaBD);
+	}
 
-		return this.tareaRepository.save(tareaDB);
+	// Borrar una tarea.
+	public void deleteById(int idTarea) {
+		if (!existsById(idTarea)) {
+			throw new TareaNotFoundException("El ID introducido no aparece en la base de datos");
+		}
+		this.tareaRepository.deleteById(idTarea);
+	}
+
+	// Iniciar una tarea
+	public Tarea iniciarTarea(int idTarea) {
+		if (!this.tareaRepository.existsById(idTarea)) {
+			throw new TareaNotFoundException("No existe la tarea con ID: " + idTarea);
+		}
+		if (this.tareaRepository.findById(idTarea).get().getEstado() != Estado.PENDIENTE) {
+			throw new TareaExceptions("Para iniciar nuna tarea, su estado debe ser PENDIENTE");
+		}
+		Tarea tarea = this.findById(idTarea);
+		tarea.setEstado(Estado.EN_PROGRESO);
+
+		return this.tareaRepository.save(tarea);
 	}
 
 	// Ejemplos OPTIONAL
@@ -164,12 +173,7 @@ public class TareaService {
 	 */
 
 	// Obtener los titulos de las tareas pendientes
-	public List<String> tituloTareasPendientesFuncional() {
-		return this.tareaRepository.findAll().stream().filter(t -> t.getEstado() == Estado.PENDIENTE)
-				.map(t -> t.getTitulo()).collect(Collectors.toList());
-	}
 
-	// Con repository
 	public List<String> tituloTareasPendientes() {
 		return this.tareaRepository.findByEstado(Estado.PENDIENTE).stream().map(t -> t.getTitulo())
 				.collect(Collectors.toList());
@@ -201,34 +205,27 @@ public class TareaService {
 
 	// Obtener tareas mediante su título (que contenga el String que se pasa como
 	// título).
-	public List<String> tituloTareaFuncional() {
-		return this.tareaRepository.findAll().stream().map(t -> t.getTitulo()).collect(Collectors.toList());
+	public List<Tarea> obtenerTareasPorTitulo(String title) {
+		return tareaRepository.findByTituloContainingIgnoreCase(title);
 	}
 
 	// Completar una tarea (solo se puden completar tareas EN_PROGRESO).
 	public Tarea completarTarea(int idTarea, Tarea tarea) {
 		if (idTarea != tarea.getId()) {
-			throw new TareaExceptions(
-					"El ID del Path (" + idTarea + ") y el body (" + tarea.getId() + ") no coinciden");
+			throw new TareaExceptions( "El ID del Path (" + idTarea + ") y el body (" + tarea.getId() + ") no coinciden");
 		}
 		if (!this.tareaRepository.existsById(idTarea)) {
 			throw new TareaExceptions("No se ha encontrado la tarea con ID: " + idTarea);
 		}
-		if (tarea.getEstado() == Estado.PENDIENTE) {
-			throw new TareaExceptions(
-					"La tarea introducida no se puede completar, ya que su estado debe estar en progreso");
+		Tarea tareaDB = this.tareaRepository.findById(idTarea)
+				.orElseThrow(() -> new TareaExceptions("No se ha encontrado la tarea con ID: " + idTarea));
+		if (tareaDB.getEstado() != Estado.EN_PROGRESO) {
+			throw new TareaExceptions("La tarea no se puede completar, ya que su estado debe estar en progreso");
 		}
 
-		Tarea tareaDB = this.findById(tarea.getId());
-		tarea.setFechaCreacion(tareaDB.getFechaCreacion());
-		tarea.setDescripcion(tarea.getDescripcion());
-		tarea.setTitulo(tarea.getTitulo());
-		tarea.setFechaVencimiento(tarea.getFechaVencimiento());
-
-		/* ESTO SI DEJA ACTUALZIAR DATOS, ES DECIR, MODIFCARLOS */
 		tareaDB.setEstado(Estado.COMPLETADA);
 
-		return this.tareaRepository.save(tarea);
+		return this.tareaRepository.save(tareaDB);
 	}
 
 }
